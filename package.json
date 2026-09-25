@@ -1,7 +1,7 @@
 {
   "name": "dsh-senior-developer",
-  "version": "0.4.0",
-  "description": "让 DeepSeek Harness 以「高级全栈开发工程师」核心角色工作（含 PM/需求能力）；代码评审 / 技术文档 / 部署运维已拆分为独立插件 dsh-reviewer / dsh-docs / dsh-devops。",
+  "version": "0.5.0",
+  "description": "让 DeepSeek Harness 以「高级全栈开发工程师」核心角色工作（含 PM/需求能力 + 技术选型默认 + 交付清单模板）；代码评审 / 技术文档 / 部署运维已拆分为独立插件。带重复挂载去重。",
   "type": "module",
   "main": "index.js",
   "files": [

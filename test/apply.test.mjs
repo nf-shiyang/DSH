@@ -10,10 +10,9 @@
  *   边界&异常  —— complete 严格语义 / order NaN·Infinity / config=null /
  *               缺失 systemPrompt 服务 / API 改名
  *
- * 标 [KNOWN-BUG] 的用例是**当前实现仍存在的真实残留限制**（非崩溃类）：
- *   · 同一 ctx 重复 apply 会产生重复同名 section（热重载/重复挂载场景）。
- * 其余历史 P0 缺陷均已修复，下方对应用例断言「已修复」行为。
- * 退出码：仅当「常规用例」失败时为 1；[KNOWN-BUG] 失败仅作风险提示。
+ * 历史 P0 缺陷均已修复，下方对应用例断言「已修复」行为。
+ * 去重（同一 ctx 重复 apply 仅注册一次）也已修复并断言。
+ * 退出码：仅当「常规用例」失败时为 1。
  */
 import assert from 'node:assert/strict'
 import { apply } from '../index.js'
@@ -163,13 +162,19 @@ test('[已修复] systemPrompt API 改名优雅降级', () => {
   assert.equal(ctx.errors.length, 1)
 })
 
-console.log('\n=== 已知限制 ===')
-test('[KNOWN-BUG] 同一 ctx 重复 apply 产生重复 section（无去重，非崩溃）', () => {
+console.log('\n=== 去重（已修复） ===')
+test('[已修复] 同一 ctx 重复 apply 仅注册 1 段（去重）', () => {
   const ctx = makeMockCtx()
   apply(ctx, {})
   apply(ctx, {})
-  assert.equal(ctx.sections.length, 1) // 理想应去重；当前实现会重复
-}, { knownBug: true })
+  assert.equal(ctx.sections.length, 1)
+})
+test('[已修复] 重复 apply 触发一次去重告警', () => {
+  const ctx = makeMockCtx()
+  apply(ctx, {})
+  apply(ctx, {})
+  assert.equal(ctx.warns.length, 1)
+})
 
 console.log('\n==== 测试结果汇总 ====')
 console.log(`通过:                       ${passed}`)

@@ -29,6 +29,18 @@ export const inject = ['systemPrompt']
 /** 默认排序值（persona band 之后、tool guidance 之前） */
 const DEFAULT_ORDER = 50
 
+/** 默认 section 名 */
+const DEFAULT_NAME = 'senior-developer:core'
+
+/** 插件标签（用于日志） */
+const LABEL = 'senior-developer'
+
+/**
+ * 去重注册表：按挂载上下文(ctx) 记录已注册的 section 名。
+ * 防止同一 ctx 重复 apply（热重载 / 重复挂载）产生重复段落。
+ */
+const REGISTRY = new WeakMap()
+
 /* ===================== 角色文本 ===================== */
 
 /**
@@ -55,11 +67,20 @@ const CORE_ROLE = `# 角色：高级全栈开发工程师（Senior Full-Stack De
 - **数据与 AI 集成**：调用大模型与第三方 API、向量检索、提示工程，把 AI 能力稳妥地落地进产品。
 遇到超出上述范围、或需要第三方付费账号 / 资源的任务时，明确告知并给出可行路径，而不是硬撑或静默跳过。
 
+## 技术选型默认推荐（除非用户另行指定）
+为减少无谓争论、保证一致性，默认按以下选型出手；用户指定其它栈时优先遵从用户：
+- **前端**：React + TypeScript + Vite；样式 Tailwind CSS 或 CSS Modules；状态 Zustand / Context。
+- **后端**：Node 用 Express / Fastify 或 Hono；Python 用 FastAPI / Flask；接口优先 REST，需强类型契约时 GraphQL / tRPC。
+- **数据**：关系型默认 PostgreSQL + Prisma（或 Drizzle）；需缓存 / 队列默认 Redis；校验用 Zod。
+- **工程化**：包管理 pnpm / npm；lint+format 用 ESLint + Prettier（或 Biome）；提交信息 Conventional Commits。
+- **部署**：容器化 Docker + GitHub Actions 流水线；静态/SSR 优先边缘/Serverless。
+任何选型都要能说清「为什么选它、代价是什么」，不盲从潮流。
+
 ## 工作流（铁律）
 - 理解任务后，先输出简洁的执行计划（功能点 + 预计复杂度 + 技术选型），不超过 10 行；需求不明时先确认关键问题，不猜测后大量返工。
 - 增量实现：每个模块走「写 → 自动验证（语法 / 类型检查 / 构建 / 测试 / 冒烟）→ 简要汇报」循环，一句话告知进度与结果。
 - 架构权衡：存在多种实现路径时，先一句话点明推荐方案与理由（复杂度、可维护性、性能、依赖成本），必要时再动手，避免盲目堆砌或过度设计。
-- 全部完成后输出交付清单：已实现项、运行方式、已知限制、后续建议。
+- 全部完成后输出「交付清单」（见下）。
 
 ## 需求澄清与验收（产品视角，已并入核心）
 你自带上游对齐能力，动手前先把「做什么、做到什么程度」对齐清楚，避免闷头瞎做：
@@ -91,13 +112,23 @@ const CORE_ROLE = `# 角色：高级全栈开发工程师（Senior Full-Stack De
 - 代码为主、解释为辅；不重复已展示代码，修改时只展示变更部分。
 - 注释精简，只在关键逻辑处添加；进度用一行话清晰告知；结论先行，细节随后。
 
+## 交付清单模板（每次完成后输出）
+\`\`\`
+## 交付清单
+- 已实现：<逐条功能点>
+- 如何运行：<安装 / 启动 / 访问地址 命令或步骤>
+- 验证结果：<构建/测试/类型检查结果摘要>
+- 已知限制：<未覆盖/待办/已知问题>
+- 后续建议：<可选的下一步>
+\`\`\`
+
 ## 身份声明
 当被问及身份时，你是「高级全栈开发工程师」——一位拥有全栈广度与单点深度、能在前端 / 后端 / 数据与基础设施之间自由切换、独立交付完整需求，并自带需求澄清与验收能力的「高级开发工程师」。`
 
 /* ===================== 注册逻辑 ===================== */
 
 /**
- * 注册角色段落到挂载上下文的 scope。
+ * 注册角色段落到挂载上下文的 scope（带去重）。
  * @param {import('@deepseek-ai/cordis').Context} ctx
  * @param {object} [config] - { text?, name?, order?, complete? }
  */
@@ -108,11 +139,24 @@ export function apply(ctx, config) {
   // 防御：systemPrompt 服务缺失或 API 改名时优雅降级，不再硬崩溃（DSH 升级风险）
   if (!ctx.systemPrompt || typeof ctx.systemPrompt.section !== 'function') {
     ctx.logger?.error?.(
-      'senior-developer: 未检测到可用的 systemPrompt.section 服务（需 @deepseek-ai/dsh-base）。' +
+      LABEL + ': 未检测到可用的 systemPrompt.section 服务（需 @deepseek-ai/dsh-base）。' +
       '角色段落未注入，请检查 dsh 版本或插件依赖。'
     )
     return
   }
+
+  const sectionName = cfg.name || DEFAULT_NAME
+
+  // 去重：同一 ctx 下同一段名只注册一次，避免热重载/重复挂载产生重复段落
+  let registry = REGISTRY.get(ctx)
+  if (!registry) { registry = new Set(); REGISTRY.set(ctx, registry) }
+  if (registry.has(sectionName)) {
+    ctx.logger?.warn?.(
+      LABEL + `: 段 "${sectionName}" 已在本上下文注册，跳过重复挂载（避免重复段落）。`
+    )
+    return
+  }
+  registry.add(sectionName)
 
   // 角色文本：config.text 整体覆盖优先；否则用内置核心角色（含 PM 能力）
   const rawText = typeof cfg.text === 'string' ? cfg.text.trim() : ''
@@ -123,15 +167,23 @@ export function apply(ctx, config) {
   // complete 严格判定：只接受布尔 true，其它值告警并忽略（避免误抑制其它段）
   if (cfg.complete !== undefined && cfg.complete !== true && cfg.complete !== false) {
     ctx.logger?.warn?.(
-      'senior-developer: `complete` 仅接受布尔 true；收到 ' +
+      LABEL + ': `complete` 仅接受布尔 true；收到 ' +
       JSON.stringify(cfg.complete) + '，已忽略（本段不会成为完整 system prompt）。'
     )
   }
 
-  ctx.effect(() => ctx.systemPrompt.section({
-    name: cfg.name || 'senior-developer:core',
-    order,
-    text,
-    ...(complete ? { complete: true } : {}),
-  }), 'senior-developer:core')
+  ctx.effect(() => {
+    const dispose = ctx.systemPrompt.section({
+      name: sectionName,
+      order,
+      text,
+      ...(complete ? { complete: true } : {}),
+    })
+    // teardown：释放段名占用，允许本 ctx 未来重新注册（如重载）
+    return () => {
+      registry.delete(sectionName)
+      if (typeof dispose === 'function') dispose()
+      else if (dispose && typeof dispose.dispose === 'function') dispose.dispose()
+    }
+  }, sectionName)
 }

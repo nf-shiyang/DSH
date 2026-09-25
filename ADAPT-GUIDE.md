@@ -33,7 +33,7 @@
 ## 2. 兼容契约（新版 dsh 必须核对的 5 个点）
 
 ### 2.1 系统提示词注入接口（最关键）
-当前实现（v0.4.0）：注入**单段**核心角色（已含 PM）：
+当前实现（v0.5.0）：注入**单段**核心角色（已含 PM），并对同一 ctx 重复挂载做去重：
 ```js
 ctx.effect(() => ctx.systemPrompt.section({
   name: cfg.name || 'senior-developer:core',
@@ -106,6 +106,7 @@ dsh plugin --profile web add github:<user>/<repo>   # 0.1.x 不带 -w 参数
 - **PM / 需求能力已并入 `CORE_ROLE`**（见「需求澄清与验收」小节），不是独立段——若未来要把它拆出，参照套件其它仓库（dsh-reviewer 等）的独立插件结构。
 - **`config.text` 为空/非字符串时回退内置 `CORE_ROLE`**（`const text = rawText || CORE_ROLE`），这条回退**务必保留**，否则用户清空配置会注入空段。`config` 已做空对象兜底，`config` 为 null/undefined 也不会崩溃。
 - `order` 默认 50；`complete:true` 路径要谨慎（会抑制其它段）。
+- **重复挂载去重（v0.5.0 新增）**：`index.js` 用模块级 `WeakMap` 按 `ctx + 段名` 记录已注册段落，同一上下文重复 `apply`（热重载 / 重复挂载）只注册一次并记一条 warn；teardown 时释放该段名以便重载后重新注册。新版适配时**保持这一行为**，不要退化回「重复 apply 产生重复段」。
 - 插件**零运行时依赖**，不要给 `index.js` 加 `import` 第三方包。
 
 ---
