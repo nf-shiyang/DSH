@@ -1,11 +1,11 @@
-# 让 DeepSeek Harness 以「高级全栈开发工程师（全能）」角色工作，支持模块化开关。
-# 默认注入：core（始终）+ reviewer/docs/devops/pm（默认全开）。
+# 让 DeepSeek Harness 以「高级全栈开发工程师（核心）」角色工作。
+# 本插件 = 套件中的「开发」本体（含 PM / 需求能力）；
+# 代码评审 / 技术文档 / 部署运维见 dsh-reviewer / dsh-docs / dsh-devops。
 # 配置项（config 块，均可选）：
-#   text     — 整体覆盖角色文本（不填则用内置多模块角色）
-#   name     — core 段名（默认 senior-developer:core）
-#   order    — core 段排序（默认 50；0=persona band, 100-199=tools）
-#   complete — 仅 text 模式：true 时本段成为完整 system prompt，抑制其它段
-#   modules  — 模块开关：{ reviewer?, docs?, devops?, pm? }，设为 false 关闭对应模块以省 token
+#   text     — 整体覆盖角色文本（不填则用内置核心角色）
+#   name     — section 名（默认 senior-developer:core）
+#   order    — 排序（默认 50；0=persona band, 100-199=tools）
+#   complete — true 时本段成为完整 system prompt，抑制其它段
 # 用户可在自己 profile 的 cordis.patch.yml / --patch 覆盖整行。
 - insert:
     - id: senior-developer
