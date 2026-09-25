@@ -26,14 +26,14 @@
 # 把分支替换为最新发布标签（如 dsh-v0.1.7；可用 `git tag | tail` 查看）
 git clone --depth 1 --branch dsh-v0.1.7 https://github.com/deepseek-ai/deepseek-harness.git
 cd deepseek-harness && pnpm install && pnpm run build
-pnpm dsh plugin --profile web add -w github:nf-shiyang/DSH
+pnpm dsh plugin --profile web add github:nf-shiyang/DSH
 pnpm dsh web
 ```
 
 **方式 B：无 checkout（npx，仅编译版 harness）**
 
 ```sh
-npx @deepseek-ai/dsh plugin --profile web add -w github:nf-shiyang/DSH
+npx @deepseek-ai/dsh plugin --profile web add github:nf-shiyang/DSH
 npx @deepseek-ai/dsh web
 ```
 
@@ -65,6 +65,13 @@ npx @deepseek-ai/dsh web
 | `name`    | `senior-developer:persona` | section 名（同一 scope 层内须唯一）。                      |
 | `order`   | `50`                    | 排序值。惯例：`0` = persona，`100–199` = 工具指导。           |
 | `complete`| `false`                 | `true` 时本段成为完整 system prompt，抑制其它所有段（慎用）。 |
+
+## 验证是否生效
+
+装完重启 `dsh web`（端口默认 http://127.0.0.1:3080）后：
+
+- **简单法**：发一条开发任务，看回复是否带「高级开发工程师」风格（先任务分解、小步快跑、写→验→报）。
+- **严谨法**：运行 `dsh --profile web --dump-config`，在打印的 bundles 列表里看到 `dsh-senior-developer` 即挂载成功。
 
 ## 本地开发
 
