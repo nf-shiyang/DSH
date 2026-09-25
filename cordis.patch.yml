@@ -1,0 +1,10 @@
+# 让 DeepSeek Harness 以「高级开发工程师」角色工作。
+# 默认使用插件内置角色；如需自定义角色，在 config 里用 YAML 多行块加 text: |
+#   name     — section 名；order — 排序（0 persona band, 100-199 tools）
+#   complete — true 时本段成为完整 system prompt，抑制其它段
+# 用户可在自己 profile 的 cordis.patch.yml / --patch 覆盖整行。
+- insert:
+    - id: senior-developer
+      name: 'dsh-senior-developer'
+      config:
+        order: 50

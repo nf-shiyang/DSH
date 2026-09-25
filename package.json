@@ -1,0 +1,45 @@
+{
+  "name": "dsh-senior-developer",
+  "version": "0.1.0",
+  "description": "让 DeepSeek Harness 以「高级开发工程师」角色 + 工作流工作 — a role/persona bundle for DeepSeek Harness.",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "cordis.patch.yml"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nf-shiyang/DSH.git"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "system-prompt",
+    "cordis",
+    "persona",
+    "senior-developer",
+    "role",
+    "expert"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --check index.js",
+    "prepack": "npm run build"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.0-rc.7"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.0-rc.7"
+  }
+}
