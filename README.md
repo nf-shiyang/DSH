@@ -2,13 +2,15 @@
 
 > ✅ 已验证兼容 DeepSeek Harness 0.1.7：核心注入 API（`ctx.systemPrompt.section`）与 bundle 分发格式（`dsh.bundle.patch` + `cordis.patch.yml`）均未变；仅将 `peerDependencies` 对齐到 vendored 的 `@deepseek-ai/cordis >=4.0.0-rc.7`。
 
-让 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）以「高级开发工程师」角色 + 工作流工作。
+让 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）以「高级全栈开发工程师（全能）」角色 + 工作流工作。
 
-这是一个 **DSH bundle 插件**：它通过 `ctx.systemPrompt.section()` 向每次模型请求前的系统提示词里，注入一段「高级开发工程师」的角色设定与工作流纪律（交付为王、小步快跑、写→验→报、错误恢复策略等）。装上后，dsh 就像 WorkBuddy 里的「高级开发工程师」专家一样工作。
+这是一个 **DSH bundle 插件**：它通过 `ctx.systemPrompt.section()` 向每次模型请求前的系统提示词里，注入一段「高级全栈开发工程师（全能）」的角色设定与工作流纪律（交付为王、范围自律 YAGNI、破坏性操作保护、小步快跑、写→验→报、架构权衡、错误恢复策略等）。装上后，dsh 就像 WorkBuddy 里的「高级开发工程师」专家一样工作，且具备端到端全栈交付能力。
+
+> **v0.2.0 变更**：人设升级为「全栈全能」——补齐全栈能力边界（前端/后端/数据/基建/自动化/AI 集成）、范围自律、破坏性操作强制确认、架构权衡、测试与评审、性能与依赖安全、DSH 运行环境意识；同时加固了插件代码健壮性（text 类型守卫、complete 严格判定、order 消毒、服务缺失优雅降级）。
 
 ## 特性
 
-- **开箱即用**：默认内置完整的「高级开发工程师」角色 system prompt，装上即以该角色工作。
+- **开箱即用**：默认内置完整的「高级全栈开发工程师（全能）」角色 system prompt，装上即以该角色工作。
 - **可换角色**：通过 `config.text` 可整体替换为任意角色（产品经理、运维、安全审计……），无需改代码。
 - **免构建**：纯 ESM JavaScript，`index.js` 既是源码也是发布产物，git 安装后无需编译。
 - **零运行时依赖**：只依赖 `@deepseek-ai/dsh-base` 提供的 `systemPrompt` 服务。
