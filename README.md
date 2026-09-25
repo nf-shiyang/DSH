@@ -4,13 +4,15 @@
 
 让 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）以「高级全栈开发工程师（全能）」角色 + 工作流工作。
 
-这是一个 **DSH bundle 插件**：它通过 `ctx.systemPrompt.section()` 向每次模型请求前的系统提示词里，注入一段「高级全栈开发工程师（全能）」的角色设定与工作流纪律（交付为王、范围自律 YAGNI、破坏性操作保护、小步快跑、写→验→报、架构权衡、错误恢复策略等）。装上后，dsh 就像 WorkBuddy 里的「高级开发工程师」专家一样工作，且具备端到端全栈交付能力。
+这是一个 **DSH bundle 插件**：它通过 `ctx.systemPrompt.section()` 向每次模型请求前的系统提示词里，注入**多段**角色设定与工作流纪律——一个始终在的「核心（全栈工程师）」段，外加按需开启的 `reviewer`（代码评审）/ `docs`（技术文档）/ `devops`（部署运维）/ `pm`（产品经理）四个可选模块。装上后，dsh 就像 WorkBuddy 里的「高级开发工程师」专家一样工作，且具备端到端全栈交付能力；用 `config.modules` 关掉暂时用不到的模块即可省 token。
 
 > **v0.2.0 变更**：人设升级为「全栈全能」——补齐全栈能力边界（前端/后端/数据/基建/自动化/AI 集成）、范围自律、破坏性操作强制确认、架构权衡、测试与评审、性能与依赖安全、DSH 运行环境意识；同时加固了插件代码健壮性（text 类型守卫、complete 严格判定、order 消毒、服务缺失优雅降级）。
+> **v0.3.0 变更**：角色拆分为「核心 + 4 个可选模块」并新增 `config.modules` 开关——`reviewer` / `docs` / `devops` / `pm` 默认全开（等同原全栈全能角色），可按任务关闭以省 token；`core` 始终注入、不可关闭。向后兼容 `config.text` 整体覆盖与全部健壮性守卫。
 
 ## 特性
 
 - **开箱即用**：默认内置完整的「高级全栈开发工程师（全能）」角色 system prompt，装上即以该角色工作。
+- **模块开关（省 token）**：角色拆为「核心 + 4 可选模块」（reviewer/docs/devops/pm），默认全开；用 `config.modules` 关掉暂时用不到的模块，做简单任务时不必背着全套指令。
 - **可换角色**：通过 `config.text` 可整体替换为任意角色（产品经理、运维、安全审计……），无需改代码。
 - **免构建**：纯 ESM JavaScript，`index.js` 既是源码也是发布产物，git 安装后无需编译。
 - **零运行时依赖**：只依赖 `@deepseek-ai/dsh-base` 提供的 `systemPrompt` 服务。
@@ -18,7 +20,7 @@
 
 ## 安装
 
-> 前提：Node.js 22.19+ 或 24+，pnpm 11（`corepack enable` 或 `npm i -g pnpm`）。`dsh plugin` 会在 profile 目录内转发给 pnpm。
+> 前提：Node.js 22.19+ 或 24+，pnpm 11（`corework enable` 或 `npm i -g pnpm`）。`dsh plugin` 会在 profile 目录内转发给 pnpm。
 
 本插件已发布在 https://github.com/nf-shiyang/DSH，下面命令直接使用该仓库地址。
 
@@ -44,7 +46,7 @@ npx @deepseek-ai/dsh web
 
 ## 自定义角色
 
-默认角色已写入 `index.js` 的 `DEFAULT_ROLE`。如果你想换成别的角色，在
+默认角色已写入 `index.js`：主角色 `CORE_ROLE` 与可选模块 `REVIEWER_ROLE` / `DOCS_ROLE` / `DEVOPS_ROLE` / `PM_ROLE`（五个常量）。如果你想换成别的角色，在
 `$DSH_HOME/profiles/web/cordis.patch.yml` 里覆盖该行（见官方
 [publish 指南](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md) 的层级优先级）：
 
@@ -57,16 +59,28 @@ npx @deepseek-ai/dsh web
     order: 50
 ```
 
-`text` 字段为空（默认）时，插件回退到内置的「高级开发工程师」角色。
+`text` 字段为空（默认）时，插件注入内置的多模块角色（core + 全部可选模块）。如只想用核心工程师、关掉评审与文档：
+
+```yaml
+- id: senior-developer
+  name: 'dsh-senior-developer'
+  config:
+    modules:
+      reviewer: false
+      docs: false
+```
+
+（devops / pm 不写即默认开启；`core` 始终注入、不可关闭。）
 
 ## 配置项
 
 | Key       | 默认                    | 含义                                                         |
 | --------- | ----------------------- | ------------------------------------------------------------ |
-| `text`    | 内置「高级开发工程师」   | 注入的 section 文本。为空 ⇒ 使用内置默认角色。                |
-| `name`    | `senior-developer:persona` | section 名（同一 scope 层内须唯一）。                      |
-| `order`   | `50`                    | 排序值。惯例：`0` = persona，`100–199` = 工具指导。           |
-| `complete`| `false`                 | `true` 时本段成为完整 system prompt，抑制其它所有段（慎用）。 |
+| `text`    | 内置多模块角色          | 整体覆盖角色文本。为空 ⇒ 注入内置的 core + 可选模块。         |
+| `name`    | `senior-developer:core` | 多模块模式下 core 段名（同一 scope 层内须唯一）；`text` 覆盖模式下默认 `senior-developer:persona`。 |
+| `order`   | `50`                    | core 段排序值。惯例：`0` = persona，`100–199` = 工具指导。    |
+| `complete`| `false`                 | 仅 `text` 覆盖模式可用；`true` 时该段成为完整 system prompt，抑制其它所有段（慎用）。 |
+| `modules` | `{}`（全部可选开启）    | 模块开关：`{ reviewer?, docs?, devops?, pm? }`，某键为 `false` 即关闭对应模块；`core` 始终注入、不可关闭。 |
 
 ## 验证是否生效
 
@@ -85,6 +99,8 @@ DSH_HOME=$HOME/.dsh-senior-dev pnpm --dir /path/to/deepseek-harness dsh plugin -
 ```
 
 改完 `index.js` 直接重启 `dsh web` 即可，不触碰 harness 仓库与默认 `~/.dsh`。
+
+测试：`node test/apply.test.mjs`（零依赖，覆盖默认注入、模块开关、健壮性、已知限制）。
 
 ## 发布到社区（可选）
 

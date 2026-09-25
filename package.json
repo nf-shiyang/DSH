@@ -1,7 +1,7 @@
 {
   "name": "dsh-senior-developer",
-  "version": "0.2.0",
-  "description": "让 DeepSeek Harness 以「高级全栈开发工程师（全能）」角色 + 工作流工作 — a full-stack all-round role/persona bundle for DeepSeek Harness.",
+  "version": "0.3.0",
+  "description": "让 DeepSeek Harness 以「高级全栈开发工程师（全能）」角色 + 工作流工作，支持模块化开关（reviewer/docs/devops/pm）按需注入以省 token — a modular full-stack all-round role/persona bundle for DeepSeek Harness.",
   "type": "module",
   "main": "index.js",
   "files": [
